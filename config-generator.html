@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nested Dropdown Folder Menu — Config Generator</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-body: #F5F5F7;
+            --bg-sidebar: #FFFFFF;
+            --text-main: #1C1C1E;
+            --text-secondary: #666666;
+            --text-tertiary: #999999;
+            --border-light: #E5E5E5;
+            --border-hover: #D4D4D4;
+            --border-active: #18181B;
+            --accent: #18181B;
+            --accent-hover: #09090B;
+            --accent-contrast: #FFFFFF;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-lg: 0 10px 30px -5px rgba(0,0,0,0.12);
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --sidebar-width: 380px;
+            --header-height: 60px;
+        }
+
+        * { box-sizing: border-box; outline: none; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            font-size: 13px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-light);
+            display: flex; flex-direction: column;
+            z-index: 20;
+        }
+
+        .sidebar-header {
+            height: var(--header-height);
+            padding: 0 24px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar-header h2 {
+            font-size: 15px; font-weight: 700; margin: 0;
+            display: flex; align-items: center; gap: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-icon {
+            width: 30px; height: 30px;
+            background: var(--accent); color: #fff;
+            border-radius: 8px;
+            display: inline-flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header .badge {
+            font-size: 10px; background: #F4F4F5;
+            padding: 2px 7px; border-radius: 4px;
+            color: #52525B; font-weight: 600; border: 1px solid #D4D4D8;
+        }
+
+        .sidebar-content { flex: 1; overflow-y: auto; padding: 24px; }
+        .sidebar-content::-webkit-scrollbar { width: 6px; }
+        .sidebar-content::-webkit-scrollbar-thumb { background: #E5E5E5; border-radius: 3px; }
+        .sidebar-content::-webkit-scrollbar-thumb:hover { background: #D4D4D4; }
+
+        .group { margin-bottom: 24px; }
+
+        .group-header {
+            font-size: 12px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.07em;
+            color: var(--text-tertiary);
+            margin-bottom: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: space-between;
+            transition: color 0.2s;
+        }
+        .group-header:hover { color: var(--text-main); }
+        .group-header::after {
+            content: ''; width: 6px; height: 6px;
+            border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+            transform: rotate(45deg); transition: transform 0.2s; margin-right: 4px;
+        }
+        .group.open .group-header::after { transform: rotate(-135deg); }
+        .group-body { display: none; }
+        .group.open .group-body { display: block; animation: slideIn 0.2s ease-out; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .control-row { margin-bottom: 16px; }
+
+        label {
+            display: block; font-size: 13px; font-weight: 500;
+            margin-bottom: 6px; color: var(--text-main);
+        }
+
+        .helper-text { font-size: 11px; color: var(--text-secondary); margin-top: 6px; line-height: 1.4; }
+
+        input[type="text"], input[type="number"], select, textarea {
+            width: 100%; height: 36px; padding: 0 10px;
+            font-family: inherit; font-size: 13px;
+            border: 1px solid var(--border-light); border-radius: var(--radius-sm);
+            background: #fff; color: var(--text-main);
+            transition: all 0.15s; appearance: none;
+        }
+        textarea { height: auto; min-height: 70px; padding: 8px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5; resize: vertical; }
+
+        input:hover, select:hover, textarea:hover { border-color: var(--border-hover); }
+        input:focus, select:focus, textarea:focus { border-color: var(--border-active); box-shadow: 0 0 0 3px rgba(0,0,0,0.08); }
+
+        select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat; background-position: right 8px center;
+            background-size: 14px; padding-right: 30px;
+        }
+
+        .toggle-row {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 12px; min-height: 24px;
+        }
+        .toggle-row label { margin: 0; font-weight: 400; color: var(--text-secondary); }
+
+        input[type="checkbox"] {
+            appearance: none; width: 36px; height: 20px;
+            background: #E5E5E5; border-radius: 20px;
+            position: relative; cursor: pointer; transition: 0.2s; border: none; flex-shrink: 0;
+        }
+        input[type="checkbox"]::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 16px; height: 16px; background: #fff; border-radius: 50%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            transition: 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        input[type="checkbox"]:checked { background: var(--accent); }
+        input[type="checkbox"]:checked::after { transform: translateX(16px); }
+
+        .color-row {
+            display: flex; flex-direction: column; gap: 8px;
+            background: #FAFAFA; padding: 12px;
+            border-radius: var(--radius-md); border: 1px solid var(--border-light);
+        }
+        .color-chip { display: flex; align-items: center; justify-content: space-between; }
+        .color-chip .color-label { font-size: 12px; font-weight: 500; }
+
+        input[type="color"] {
+            width: 28px; height: 28px; padding: 0;
+            border: 1.5px solid #B8B8B8; border-radius: 50%;
+            overflow: hidden; cursor: pointer; background: none;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        /* --- MAIN CONTENT --- */
+        .main-content { flex: 1; display: flex; flex-direction: column; background: #F5F5F7; position: relative; }
+
+        .topbar {
+            height: var(--header-height); padding: 0 24px;
+            border-bottom: 1px solid var(--border-light); background: #fff;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .device-toggle { background: #F2F2F2; padding: 2px; border-radius: 6px; display: flex; }
+        .device-toggle button {
+            border: none; background: transparent; padding: 6px 12px;
+            font-size: 12px; font-weight: 500; color: var(--text-secondary);
+            cursor: pointer; border-radius: 4px; transition: 0.2s;
+        }
+        .device-toggle button.active { background: #fff; color: var(--text-main); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+        .copy-btn {
+            background: var(--accent); color: var(--accent-contrast);
+            border: none; padding: 9px 20px; border-radius: 7px;
+            font-weight: 600; font-size: 13px; letter-spacing: -0.01em;
+            cursor: pointer; display: flex; align-items: center; gap: 7px;
+            transition: transform 0.1s, background 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+        }
+        .copy-btn:hover { background: var(--accent-hover); }
+        .copy-btn:active { transform: scale(0.97); }
+        .copy-btn.copied { background: #0EA5E9; box-shadow: 0 1px 3px rgba(14,165,233,0.3); }
+
+        .preview-container {
+            flex: 1; overflow-y: auto; padding: 40px;
+            display: flex; justify-content: center; align-items: flex-start;
+            background-image: radial-gradient(#E1E1E1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        #previewFrame {
+            background: #fff; width: 100%; max-width: 1100px; min-height: 480px;
+            box-shadow: var(--shadow-lg); border-radius: var(--radius-lg);
+            transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex; flex-direction: column; border: 1px solid var(--border-light);
+            overflow: hidden;
+        }
+        #previewFrame.mobile { width: 390px; border-radius: 30px; border: 8px solid #1d1d1f; }
+
+        /* === PREVIEW NAV MOCK === */
+        .nm-stage { padding: 0; flex: 1; display: flex; flex-direction: column; }
+        .nm-hint {
+            font-family: 'Inter', sans-serif; font-size: 11px; color: #9a9a9a;
+            text-align: center; padding: 10px; border-bottom: 1px dashed #ececec; background: #fafafa;
+        }
+
+        /* shared header surface — color & font driven by these vars on .nm-mount */
+        .nm-mount {
+            --nav-color: #1c1c1e;
+            --nav-bg: #ffffff;
+            color: var(--nav-color);
+            flex: 1; display: flex; flex-direction: column;
+        }
+
+        /* ---- DESKTOP ---- */
+        .nm-desktop {
+            background: var(--nav-bg);
+            padding: 22px 32px;
+            display: flex; align-items: center; gap: 28px;
+            font-size: 15px; font-weight: 500;
+            min-height: 360px; align-content: flex-start;
+        }
+        .nm-logo { font-weight: 700; font-size: 18px; letter-spacing: -0.02em; margin-right: 18px; }
+        .nm-top { position: relative; }
+        .nm-top > .nm-link { cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
+        .nm-caret { width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); margin-top: -3px; }
+
+        /* level 1 folder flyout */
+        .nm-flyout {
+            position: absolute; top: 100%; left: 0; padding-top: 12px;
+            min-width: 190px; opacity: 0; visibility: hidden; transform: translateY(4px);
+            transition: opacity .18s ease, transform .18s ease; z-index: 30;
+        }
+        .nm-top:hover > .nm-flyout { opacity: 1; visibility: visible; transform: translateY(0); }
+
+        .nm-panel {
+            background: var(--nav-bg);
+            padding: 8px 0;
+            border: var(--folder-border-thickness) var(--folder-border-style) var(--folder-border-color);
+            box-shadow: var(--folder-shadow-offset-x) var(--folder-shadow-offset-y) var(--folder-shadow-blur) var(--folder-shadow-spread) hsla(0,0%,0%, var(--folder-shadow-opacity));
+            min-width: var(--nested-folder-min-width);
+        }
+        .nm-row { position: relative; }
+        .nm-row > .nm-link {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            padding: 7px 18px; white-space: nowrap; cursor: pointer; font-size: 14px;
+        }
+        .nm-arrow { width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-top: 1.5px solid currentColor; transform: rotate(45deg); flex-shrink: 0; opacity: .7; }
+
+        /* level 2 nested panel — opens to the right */
+        .nm-nested {
+            position: absolute; top: -8px; left: 100%; padding-left: 2px;
+            opacity: 0; visibility: hidden; transition: opacity .18s ease; z-index: 31;
+        }
+        .nm-row:hover > .nm-nested { opacity: 1; visibility: visible; }
+        .nm-row.flip > .nm-nested { left: auto; right: 100%; padding-left: 0; padding-right: 2px; }
+
+        .nm-leaf { padding: 7px 18px; white-space: nowrap; cursor: pointer; font-size: 14px; }
+        .nm-leaf:hover, .nm-row > .nm-link:hover { opacity: .6; }
+        .nm-leaf.active { text-decoration: underline; text-underline-offset: var(--active-decoration-offset); text-decoration-thickness: var(--active-decoration-thickness); }
+
+        /* ---- MOBILE ---- */
+        .nm-mobile {
+            background: var(--nav-bg); flex: 1;
+            padding: 30px 26px; display: flex; flex-direction: column; gap: 4px;
+            min-height: 420px;
+        }
+        .nm-mobile .nm-mlink {
+            font-size: 22px; font-weight: 500; padding: 12px 0;
+            display: flex; align-items: center; gap: var(--mobile-nested-folder-gap);
+            justify-content: var(--m-align, space-between); cursor: pointer; position: relative;
+        }
+        .nm-acc-icon {
+            display: grid; place-items: center; flex-shrink: 0;
+            width: var(--mobile-nested-folder-icon-size); height: var(--mobile-nested-folder-icon-size);
+            transition: transform .3s ease;
+        }
+        .nm-acc-icon svg { width: 100%; height: 100%; }
+        .nm-acc.open .nm-mlink .nm-acc-icon { transform: var(--mobile-nested-folder-icon-transform); }
+        .nm-acc-content { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+        .nm-acc-wrap {
+            padding-top: var(--mobile-nested-folder-padding-top);
+            padding-bottom: var(--mobile-nested-folder-padding-bottom);
+            display: flex; flex-direction: column;
+        }
+        .nm-acc-wrap .nm-sub {
+            font-size: 17px; font-weight: 400;
+            margin-top: var(--mobile-nested-item-spacing); margin-bottom: var(--mobile-nested-item-spacing);
+            text-align: var(--m-text-align, left);
+        }
+        .nm-acc-wrap .nm-sub:first-child { margin-top: 0; }
+        .nm-acc-wrap .nm-sub:last-child { margin-bottom: 0; }
+        /* alignment insets */
+        .nm-mount[data-malign="center"] .nm-acc-icon { position: absolute; right: 0; }
+        .nm-mount[data-malign="left"] .nm-acc-wrap { padding-left: var(--mobile-nested-item-inset); }
+        .nm-mount[data-malign="right"] .nm-acc-wrap { padding-right: calc(var(--mobile-nested-folder-icon-size) + var(--mobile-nested-folder-gap) + var(--mobile-nested-item-inset)); }
+
+        /* --- CODE DRAWER --- */
+        .code-drawer {
+            height: 240px; background: #0D0D0D; color: #E1E1E1;
+            display: flex; flex-direction: column;
+            border-top: 1px solid var(--border-light); font-family: 'JetBrains Mono', monospace;
+        }
+        .drawer-header {
+            padding: 10px 24px; background: #1A1A1A; border-bottom: 1px solid #333;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .drawer-header h3 { margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; }
+        #codeOutput { flex: 1; padding: 24px; margin: 0; overflow: auto; font-size: 12px; line-height: 1.6; color: #A9B7C6; white-space: pre; }
+
+        #codeOutput .hl-key   { color: #E5BF78; }
+        #codeOutput .hl-str   { color: #87C98F; }
+        #codeOutput .hl-bool  { color: #79B8FF; }
+        #codeOutput .hl-num   { color: #FF9D7C; }
+        #codeOutput .hl-tag   { color: #6B8CAE; }
+        #codeOutput .hl-kw    { color: #C678DD; }
+        #codeOutput .hl-com   { color: #5C6370; font-style: italic; }
+        #codeOutput .hl-prop  { color: #56B6C2; }
+
+        .mobile-tabs { display: none; }
+        .mobile-copy-btn { display: none; }
+
+        @media (max-width: 1023px) {
+            body { flex-direction: column; }
+            .mobile-tabs { display: flex; border-bottom: 1px solid var(--border-light); background: #fff; }
+            .mobile-tabs .tab-btn {
+                flex: 1; border: none; background: none; padding: 12px;
+                font-size: 12px; font-weight: 500; color: var(--text-secondary);
+                display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;
+                border-bottom: 2px solid transparent;
+            }
+            .mobile-tabs .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+            .sidebar { width: 100%; height: auto; flex: 1; }
+            .mobile-copy-btn { display: flex; }
+            .topbar .device-toggle { margin: 0 auto; }
+            .topbar .copy-btn { display: none; }
+            body:not(.tab-edit) .sidebar { display: none; }
+            body:not(.tab-preview) .main-content { display: none; }
+            body.tab-code .preview-container { display: none; }
+            body.tab-code .code-drawer { height: 100%; }
+            body:not(.tab-code) .code-drawer { display: none; }
+            body.tab-preview .code-drawer { display: none; }
+        }
+    </style>
+</head>
+<body class="tab-edit">
+
+    <div class="mobile-tabs">
+        <button class="tab-btn active" onclick="setTab('edit')">Settings</button>
+        <button class="tab-btn" onclick="setTab('preview')">Preview</button>
+        <button class="tab-btn" onclick="setTab('code')">Code</button>
+    </div>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>
+                <span class="brand-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="13" y2="6"/><line x1="3" y1="12" x2="9" y2="12"/><line x1="13" y1="12" x2="21" y2="12"/><line x1="13" y1="18" x2="21" y2="18"/></svg>
+                </span>
+                Nested Dropdown <span class="badge">v1.0</span>
+            </h2>
+            <button class="copy-btn mobile-copy-btn" id="mobileCopyBtn" onclick="copyCode()">Copy</button>
+        </div>
+        <div class="sidebar-content">
+
+            <!-- HOSTING -->
+            <div class="group open">
+                <div class="group-header" onclick="togGroup(this)">Hosting (CDN)</div>
+                <div class="group-body">
+                    <div class="control-row">
+                        <label>CSS File URL</label>
+                        <input type="text" id="cdnCss" value="https://cdn.jsdelivr.net/gh/square-design-lab/Nested-Dropdown-Folder@main/nestedMenu.css">
+                    </div>
+                    <div class="control-row">
+                        <label>JS File URL</label>
+                        <input type="text" id="cdnJs" value="https://cdn.jsdelivr.net/gh/square-design-lab/Nested-Dropdown-Folder@main/nestedMenu.js">
+                        <div class="helper-text">Replace with your own hosting or Squarespace file storage path if preferred.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETUP -->
+            <div class="group open">
+                <div class="group-header" onclick="togGroup(this)">Setup</div>
+                <div class="group-body">
+                    <div class="control-row">
+                        <label>Nested Item Prefix</label>
+                        <input type="text" id="nestedItemPrefix" value="--">
+                        <div class="helper-text">Prefix nested page names with this in the Squarespace Navigation editor.</div>
+                    </div>
+                    <div class="toggle-row">
+                        <label>Parent Links to First Child (Desktop)</label>
+                        <input type="checkbox" id="linkNestedFolderOnDesktop">
+                    </div>
+                    <div class="helper-text" style="margin-bottom:14px;">When off, the parent is a non-clickable label that only opens the dropdown.</div>
+                </div>
+            </div>
+
+            <!-- DESKTOP DROPDOWN -->
+            <div class="group">
+                <div class="group-header" onclick="togGroup(this)">Desktop Dropdown</div>
+                <div class="group-body">
+                    <div class="control-row">
+                        <label>Minimum Panel Width (px)</label>
+                        <input type="number" id="minWidth" value="200">
+                    </div>
+                    <div class="grid-2">
+                        <div class="control-row"><label>Border Thickness</label><input type="number" id="borderThickness" value="1"></div>
+                        <div class="control-row">
+                            <label>Border Style</label>
+                            <select id="borderStyle">
+                                <option value="solid" selected>Solid</option>
+                                <option value="dashed">Dashed</option>
+                                <option value="dotted">Dotted</option>
+                                <option value="double">Double</option>
+                                <option value="none">None</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="color-row" style="margin-bottom:16px;">
+                        <div class="color-chip"><span class="color-label">Border Color</span><input type="color" id="borderColor" value="#222222"></div>
+                    </div>
+                    <label style="margin-bottom:8px;">Drop Shadow</label>
+                    <div class="grid-2">
+                        <div class="control-row"><label>Offset X</label><input type="number" id="shadowX" value="2"></div>
+                        <div class="control-row"><label>Offset Y</label><input type="number" id="shadowY" value="2"></div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="control-row"><label>Blur</label><input type="number" id="shadowBlur" value="0"></div>
+                        <div class="control-row"><label>Spread</label><input type="number" id="shadowSpread" value="0"></div>
+                    </div>
+                    <div class="control-row">
+                        <label>Shadow Opacity (%)</label>
+                        <input type="number" id="shadowOpacity" value="0" min="0" max="100">
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOBILE ACCORDION -->
+            <div class="group">
+                <div class="group-header" onclick="togGroup(this)">Mobile Accordion</div>
+                <div class="group-body">
+                    <div class="control-row">
+                        <label>Menu Alignment</label>
+                        <select id="mobileAlign">
+                            <option value="left" selected>Left</option>
+                            <option value="center">Center</option>
+                            <option value="right">Right</option>
+                        </select>
+                        <div class="helper-text">Match this to your Squarespace mobile menu overlay alignment.</div>
+                    </div>
+                    <div class="control-row">
+                        <label>Toggle Icon</label>
+                        <select id="iconPreset">
+                            <option value="plus" selected>Plus (rotates to ×)</option>
+                            <option value="chevron">Chevron (rotates 180°)</option>
+                            <option value="arrow">Arrow (rotates 90°)</option>
+                            <option value="custom">Custom SVG</option>
+                        </select>
+                    </div>
+                    <div class="control-row" id="customIconRow" style="display:none;">
+                        <label>Custom Icon SVG</label>
+                        <textarea id="customIcon" placeholder="<svg ...>...</svg>"></textarea>
+                    </div>
+                    <div class="grid-2">
+                        <div class="control-row"><label>Icon Size (px)</label><input type="number" id="iconSize" value="25"></div>
+                        <div class="control-row">
+                            <label>Open Transform</label>
+                            <select id="iconTransform">
+                                <option value="rotate(45deg)" selected>Rotate 45°</option>
+                                <option value="rotate(90deg)">Rotate 90°</option>
+                                <option value="rotate(135deg)">Rotate 135°</option>
+                                <option value="rotate(180deg)">Rotate 180°</option>
+                                <option value="none">None</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control-row"><label>Text / Icon Gap (px)</label><input type="number" id="mobileGap" value="8"></div>
+                    <div class="grid-2">
+                        <div class="control-row"><label>Pad Top (rem)</label><input type="number" step="0.1" id="padTop" value="0.5"></div>
+                        <div class="control-row"><label>Pad Bottom (rem)</label><input type="number" step="0.1" id="padBottom" value="1"></div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="control-row"><label>Item Spacing (vw)</label><input type="number" step="0.5" id="itemSpacing" value="2"></div>
+                        <div class="control-row"><label>Item Inset (px)</label><input type="number" id="itemInset" value="12"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIVE LINK -->
+            <div class="group">
+                <div class="group-header" onclick="togGroup(this)">Active Link</div>
+                <div class="group-body">
+                    <div class="grid-2">
+                        <div class="control-row"><label>Underline Offset (px)</label><input type="number" id="activeOffset" value="4"></div>
+                        <div class="control-row"><label>Underline Thickness (px)</label><input type="number" id="activeThickness" value="1"></div>
+                    </div>
+                    <div class="helper-text">Applied to nav links matching the current page URL.</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="topbar">
+            <div class="device-toggle">
+                <button id="desktopToggle" class="active" onclick="setDev('desktop')">Desktop</button>
+                <button id="mobileToggle" onclick="setDev('mobile')">Mobile</button>
+            </div>
+            <button class="copy-btn" id="copyBtn" onclick="copyCode()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                Copy Code
+            </button>
+        </div>
+
+        <div class="preview-container">
+            <div id="previewFrame">
+                <div class="nm-stage">
+                    <div class="nm-hint" id="previewHint">Hover a menu item with a ▸ arrow to reveal its nested dropdown.</div>
+                    <div class="nm-mount" id="nmMount"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="code-drawer">
+            <div class="drawer-header"><h3>Installation Code — paste in Settings → Advanced → Code Injection → Footer</h3></div>
+            <pre id="codeOutput"></pre>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const $ = (id) => document.getElementById(id);
+        let rawCode = "";
+
+        /* ---- Icon presets ---- */
+        const ICONS = {
+            plus: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>',
+            chevron: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>',
+            arrow: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>'
+        };
+        const ICON_DEFAULT_TRANSFORM = { plus: 'rotate(45deg)', chevron: 'rotate(180deg)', arrow: 'rotate(90deg)' };
+
+        function readConfig() {
+            const preset = $("iconPreset").value;
+            const mobileIcon = preset === "custom" ? ($("customIcon").value.trim() || ICONS.plus) : ICONS[preset];
+            return {
+                cdnCss: $("cdnCss").value.trim(),
+                cdnJs: $("cdnJs").value.trim(),
+                nestedItemPrefix: $("nestedItemPrefix").value || "--",
+                linkNestedFolderOnDesktop: $("linkNestedFolderOnDesktop").checked,
+                iconPreset: preset,
+                mobileIcon: mobileIcon,
+                // CSS variables
+                vars: {
+                    "--nested-folder-min-width": $("minWidth").value + "px",
+                    "--folder-border-thickness": $("borderThickness").value + "px",
+                    "--folder-border-style": $("borderStyle").value,
+                    "--folder-border-color": $("borderColor").value,
+                    "--folder-shadow-offset-x": $("shadowX").value + "px",
+                    "--folder-shadow-offset-y": $("shadowY").value + "px",
+                    "--folder-shadow-blur": $("shadowBlur").value + "px",
+                    "--folder-shadow-spread": $("shadowSpread").value + "px",
+                    "--folder-shadow-opacity": $("shadowOpacity").value + "%",
+                    "--mobile-nested-folder-gap": $("mobileGap").value + "px",
+                    "--mobile-nested-folder-icon-size": $("iconSize").value + "px",
+                    "--mobile-nested-folder-icon-transform": $("iconTransform").value,
+                    "--mobile-nested-folder-padding-top": $("padTop").value + "rem",
+                    "--mobile-nested-folder-padding-bottom": $("padBottom").value + "rem",
+                    "--mobile-nested-item-spacing": $("itemSpacing").value + "vw",
+                    "--mobile-nested-item-inset": $("itemInset").value + "px",
+                    "--active-decoration-offset": $("activeOffset").value + "px",
+                    "--active-decoration-thickness": $("activeThickness").value + "px"
+                },
+                mobileAlign: $("mobileAlign").value
+            };
+        }
+
+        /* ---- Preview ---- */
+        let device = "desktop";
+
+        function applyVars(el, cfg) {
+            Object.keys(cfg.vars).forEach((k) => el.style.setProperty(k, cfg.vars[k]));
+        }
+
+        function buildDesktop(cfg) {
+            const arrow = '<span class="nm-arrow"></span>';
+            return `
+              <div class="nm-desktop">
+                <span class="nm-logo">Studio</span>
+                <span class="nm-top"><span class="nm-link">Home</span></span>
+                <span class="nm-top">
+                  <span class="nm-link">Shop <span class="nm-caret"></span></span>
+                  <div class="nm-flyout">
+                    <div class="nm-panel">
+                      <div class="nm-row">
+                        <span class="nm-link">Products ${arrow}</span>
+                        <div class="nm-nested"><div class="nm-panel">
+                          <div class="nm-leaf active">Shirts</div>
+                          <div class="nm-leaf">Pants</div>
+                          <div class="nm-leaf">Accessories</div>
+                        </div></div>
+                      </div>
+                      <div class="nm-row">
+                        <span class="nm-link">Templates ${arrow}</span>
+                        <div class="nm-nested"><div class="nm-panel">
+                          <div class="nm-leaf">Free</div>
+                          <div class="nm-leaf">Premium</div>
+                        </div></div>
+                      </div>
+                      <div class="nm-row"><span class="nm-link">Gift Cards</span></div>
+                    </div>
+                  </div>
+                </span>
+                <span class="nm-top"><span class="nm-link">About</span></span>
+                <span class="nm-top"><span class="nm-link">Contact</span></span>
+              </div>`;
+        }
+
+        function buildMobile(cfg) {
+            const icon = `<span class="nm-acc-icon">${cfg.mobileIcon}</span>`;
+            return `
+              <div class="nm-mobile">
+                <div class="nm-mlink"><span>Home</span></div>
+                <div class="nm-acc open" data-acc>
+                  <div class="nm-mlink"><span>Products</span>${icon}</div>
+                  <div class="nm-acc-content"><div class="nm-acc-wrap">
+                    <div class="nm-sub">Shirts</div>
+                    <div class="nm-sub">Pants</div>
+                    <div class="nm-sub">Accessories</div>
+                  </div></div>
+                </div>
+                <div class="nm-acc" data-acc>
+                  <div class="nm-mlink"><span>Templates</span>${icon}</div>
+                  <div class="nm-acc-content"><div class="nm-acc-wrap">
+                    <div class="nm-sub">Free</div>
+                    <div class="nm-sub">Premium</div>
+                  </div></div>
+                </div>
+                <div class="nm-mlink"><span>About</span></div>
+                <div class="nm-mlink"><span>Contact</span></div>
+              </div>`;
+        }
+
+        function wireMobileAccordions() {
+            document.querySelectorAll("#nmMount [data-acc]").forEach((acc) => {
+                const trigger = acc.querySelector(".nm-mlink");
+                const content = acc.querySelector(".nm-acc-content");
+                const sync = () => { content.style.maxHeight = acc.classList.contains("open") ? content.scrollHeight + "px" : null; };
+                trigger.addEventListener("click", () => { acc.classList.toggle("open"); sync(); });
+                sync();
+            });
+        }
+
+        function renderPreview() {
+            const cfg = readConfig();
+            const mount = $("nmMount");
+            applyVars(mount, cfg);
+            mount.dataset.malign = cfg.mobileAlign;
+
+            const alignMap = { left: "space-between", center: "center", right: "flex-end" };
+            const textAlignMap = { left: "left", center: "center", right: "right" };
+            mount.style.setProperty("--m-align", alignMap[cfg.mobileAlign]);
+            mount.style.setProperty("--m-text-align", textAlignMap[cfg.mobileAlign]);
+
+            $("previewHint").textContent = device === "desktop"
+                ? "Hover “Shop”, then hover “Products” / “Templates” to reveal the nested dropdown."
+                : "Tap a parent item to expand / collapse its accordion.";
+
+            mount.innerHTML = device === "desktop" ? buildDesktop(cfg) : buildMobile(cfg);
+            if (device === "mobile") wireMobileAccordions();
+            generateCode(cfg);
+        }
+
+        /* ---- Code generation ---- */
+        function generateCode(cfg) {
+            const css = cfg.cdnCss, js = cfg.cdnJs;
+            const settingsStr =
+`{
+  nestedItemPrefix: ${JSON.stringify(cfg.nestedItemPrefix)},
+  linkNestedFolderOnDesktop: ${cfg.linkNestedFolderOnDesktop},
+  mobileIcon: \`${cfg.mobileIcon}\`
+}`;
+
+            let varsBlock = Object.keys(cfg.vars).map((k) => "    " + k + ": " + cfg.vars[k] + ";").join("\n");
+
+            const code =
+`<!-- SDL Nested Dropdown Folder Menu v1.0 -->
+<link rel="stylesheet" href="${css}">
+
+<style>
+  #header {
+${varsBlock}
+  }
+</style>
+
+<script>
+  window.sdlNestedFolderSettings = ${settingsStr};
+<\/script>
+<script src="${js}" defer><\/script>`;
+
+            rawCode = code;
+            $("codeOutput").innerHTML = highlight(code);
+        }
+
+        function highlight(text) {
+            const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            return text.split("\n").map((line) => {
+                let h = esc(line);
+                if (/^\s*&lt;!--/.test(h)) return '<span class="hl-com">' + h + "</span>";
+                h = h.replace(/(&lt;\/?[\w][^&]*?&gt;)/g, '<span class="hl-tag">$1</span>');
+                h = h.replace(/(^\s*--[\w-]+)(:)/g, '<span class="hl-prop">$1</span>$2');
+                h = h.replace(/("(?:[^"\\]|\\.)+")(\s*:)/g, '<span class="hl-key">$1</span>$2');
+                h = h.replace(/(:\s*)("(?:[^"\\]|\\.)*")/g, (m, p, s) => p + '<span class="hl-str">' + s + "</span>");
+                h = h.replace(/(:\s*)(true|false|null)\b/g, '$1<span class="hl-bool">$2</span>');
+                h = h.replace(/\b(window|sdlNestedFolderSettings|defer|mobileIcon)\b/g, '<span class="hl-kw">$1</span>');
+                return h;
+            }).join("\n");
+        }
+
+        /* ---- UI wiring ---- */
+        window.togGroup = (h) => h.parentNode.classList.toggle("open");
+        window.setTab = (t) => {
+            document.body.className = "tab-" + t;
+            document.querySelectorAll(".tab-btn").forEach((b) =>
+                b.classList.toggle("active", b.getAttribute("onclick") === "setTab('" + t + "')"));
+        };
+        window.setDev = (d) => {
+            device = d;
+            $("previewFrame").className = d === "mobile" ? "mobile" : "";
+            $("desktopToggle").classList.toggle("active", d === "desktop");
+            $("mobileToggle").classList.toggle("active", d === "mobile");
+            renderPreview();
+        };
+        window.copyCode = () => {
+            navigator.clipboard.writeText(rawCode);
+            ["copyBtn", "mobileCopyBtn"].forEach((id) => {
+                const btn = $(id); if (!btn) return;
+                const orig = btn.innerHTML;
+                btn.innerHTML = "Copied!"; btn.classList.add("copied");
+                setTimeout(() => { btn.innerHTML = orig; btn.classList.remove("copied"); }, 1800);
+            });
+        };
+
+        // icon preset -> auto-set transform + toggle custom field
+        $("iconPreset").addEventListener("change", (e) => {
+            const v = e.target.value;
+            $("customIconRow").style.display = v === "custom" ? "block" : "none";
+            if (ICON_DEFAULT_TRANSFORM[v]) $("iconTransform").value = ICON_DEFAULT_TRANSFORM[v];
+        });
+
+        document.querySelectorAll("input, select, textarea").forEach((el) =>
+            el.addEventListener("input", renderPreview));
+
+        renderPreview();
+    })();
+    </script>
+</body>
+</html>

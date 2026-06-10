@@ -1,0 +1,5 @@
+# Dev-only source & docs — not shipped to the CDN
+plugin.js
+plugin.css
+nested-folders-plugin-docs.md
+.claude/

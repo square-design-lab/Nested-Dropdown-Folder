@@ -1,0 +1,253 @@
+/*!
+ * SDL Nested Dropdown Folder Menu — v1.0
+ * Square Design Lab
+ *
+ * Visual styling for the nested dropdown (desktop) and accordion (mobile)
+ * header menus. All appearance is driven by CSS custom properties so the
+ * config generator can produce a single override block on #header.
+ *
+ * Defaults below can be overridden by setting these variables on #header.
+ */
+
+#header {
+  /* Desktop dropdown panel */
+  --folder-border-thickness: 1px;
+  --folder-border-style: solid;
+  --folder-border-color: currentColor;
+  --folder-shadow-offset-x: 2px;
+  --folder-shadow-offset-y: 2px;
+  --folder-shadow-blur: 0px;
+  --folder-shadow-spread: 0px;
+  --folder-shadow-opacity: 0%;
+  --nested-folder-min-width: 200px;
+  --nested-folder-max-width: initial;
+
+  /* Mobile accordion */
+  --mobile-nested-folder-gap: 8px;
+  --mobile-nested-folder-icon-size: 25px;
+  --mobile-nested-folder-icon-transform: rotate(45deg);
+  --mobile-nested-folder-padding-top: 0.5rem;
+  --mobile-nested-folder-padding-bottom: 1rem;
+  --mobile-nested-item-spacing: 2vw;
+  --mobile-nested-item-inset: 12px;
+
+  /* Active link decoration */
+  --active-decoration-offset: 4px;
+  --active-decoration-thickness: 1px;
+}
+
+/* ====================================
+   DESKTOP NESTED FOLDERS
+   ==================================== */
+
+/* Nested folder container */
+#header .header-nav .nested-folder.header-nav-folder-content {
+  pointer-events: none;
+  position: absolute;
+  left: calc(100%);
+  top: calc(-0.5em - var(--folder-border-thickness, 1px));
+  padding: 0.5em 0em;
+  white-space: initial;
+  min-width: var(--nested-folder-min-width, 200px);
+  max-width: var(--nested-folder-max-width, initial);
+  width: 100%;
+  box-sizing: border-box;
+  visibility: hidden;
+  opacity: 0;
+  z-index: -1000;
+}
+
+/* Show nested folder on hover or keyboard focus */
+#header .header-nav .header-nav-item--nested-folder:hover .nested-folder,
+#header .header-nav .header-nav-item--nested-folder > a[aria-expanded="true"] + .nested-folder {
+  display: block;
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+  z-index: 10;
+}
+
+/* Nested folder trigger item */
+#header .header-nav .header-nav-item--nested-folder {
+  position: relative;
+}
+
+/* Position for right-aligned nav */
+#header .header-layout-nav-right .header-nav .header-nav-item--folder .nested-folder.header-nav-folder-content {
+  left: 100%;
+}
+
+/* Flipped folders (when off right edge) */
+#header .header-nav .header-nav-item--folder.folder-side--flipped .nested-folder.header-nav-folder-content {
+  right: 100%;
+  left: initial;
+}
+
+/* All Desktop Folders (including nested) */
+#header .header-nav-folder-content {
+  padding: 0.5em 0em;
+  box-shadow: var(--folder-shadow-offset-x, 2px)
+    var(--folder-shadow-offset-y, 2px)
+    var(--folder-shadow-blur, 0px)
+    var(--folder-shadow-spread, 0px)
+    hsla(0, 0%, 0%, var(--folder-shadow-opacity, 0%));
+  border: var(--folder-border-thickness, 1px)
+    var(--folder-border-style, solid)
+    var(--folder-border-color, var(--navigationLinkColor, currentColor));
+}
+
+/* All Desktop Folder Items */
+#header .header-nav-item--folder .header-nav-folder-content .header-nav-folder-item {
+  padding: 0 1em;
+}
+
+/* Hidden link (when clickthrough is enabled) */
+.nested-folder .hidden-link {
+  display: none;
+}
+
+/* ====================================
+   MOBILE NESTED FOLDERS (ACCORDION)
+   ==================================== */
+
+/* Mobile accordion folder container */
+.header-menu-nav-item--accordion-folder {
+  overflow: hidden;
+}
+
+/* Mobile folder trigger link */
+.header-menu-nav-item--accordion-folder.header-menu-nav-item > a {
+  display: flex;
+  gap: var(--mobile-nested-folder-gap, 8px);
+  justify-content: var(--mobile-nested-folder-alignment, space-between);
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+/* Mobile accordion icon */
+.header-menu-nav-item--accordion-folder > a .icon {
+  display: grid;
+  place-items: center;
+  transition: transform 0.3s ease;
+  width: var(--mobile-nested-folder-icon-size, 25px);
+  height: var(--mobile-nested-folder-icon-size, 25px);
+  flex-shrink: 0;
+}
+
+/* Rotate icon when open */
+.header-menu-nav-item--accordion-folder > a.open .icon {
+  transform: var(--mobile-nested-folder-icon-transform, rotate(45deg));
+}
+
+/* Mobile accordion content */
+.header-menu-nav-item--accordion-folder .accordion-folder-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+/* Mobile accordion wrapper */
+.header-menu-nav-item--accordion-folder .accordion-folder-wrapper {
+  padding-bottom: var(--mobile-nested-folder-padding-bottom, 1rem);
+  padding-top: var(--mobile-nested-folder-padding-top, 0.5rem);
+}
+
+/* Mobile nested item spacing */
+.header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item a {
+  margin-top: var(--mobile-nested-item-spacing, 2vw);
+  margin-bottom: var(--mobile-nested-item-spacing, 2vw);
+}
+
+.header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item:first-child a {
+  margin-top: 0px;
+}
+
+.header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item:last-child a {
+  margin-bottom: 0px;
+}
+
+/* Mobile nested item font size */
+.accordion-folder-content .header-menu-nav-item a {
+  font-size: var(--mobile-nested-item-size, 7.5vmin);
+}
+
+@media screen and (min-width: 576px) {
+  .accordion-folder-content .header-menu-nav-item a {
+    font-size: calc(var(--mobile-nested-item-size, 7.5vmin) - 1vmin);
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .accordion-folder-content .header-menu-nav-item a {
+    font-size: calc(var(--mobile-nested-item-size, 7.5vmin) - 2vmin);
+  }
+}
+
+/* ====================================
+   MOBILE ALIGNMENT VARIATIONS
+   ==================================== */
+
+/* Right Alignment */
+.header-overlay-alignment-right .header-menu .header-menu-nav-item--accordion-folder.header-menu-nav-item > a {
+  justify-content: var(--mobile-nested-folder-alignment, end);
+}
+
+.header-overlay-alignment-right .header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item {
+  padding-right: calc(var(--mobile-nested-folder-icon-size, 25px) + var(--mobile-nested-folder-gap, 8px) + var(--mobile-nested-item-inset, 12px));
+}
+
+/* Center Alignment */
+.header-overlay-alignment-center .header-menu .header-menu-nav-item--accordion-folder.header-menu-nav-item > a {
+  justify-content: var(--mobile-nested-folder-alignment, center);
+}
+
+.header-overlay-alignment-center .header-menu .header-menu-nav-item--accordion-folder > a .icon {
+  position: absolute;
+  right: 0;
+}
+
+.header-overlay-alignment-center .header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item {
+  padding-right: 2vw;
+  padding-left: 2vw;
+}
+
+/* Left Alignment */
+.header-overlay-alignment-left .header-menu .header-menu-nav-item--accordion-folder.header-menu-nav-item > a {
+  justify-content: var(--mobile-nested-folder-alignment, space-between);
+}
+
+.header-overlay-alignment-left .header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item {
+  padding-left: var(--mobile-nested-item-inset, 12px);
+}
+
+/* ====================================
+   ACTIVE LINK STYLES
+   ==================================== */
+
+/* Desktop nested folder item active (Level 2) */
+body:not(.header--menu-open) .header-nested-nav-folder-item--active > a {
+  display: inline-block;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: repeat-x;
+  background-size: 1px 1px;
+  background-position: 0 calc(100% - 2px);
+}
+
+/* Desktop active link span (Level 3) */
+:not(.header--menu-open) .header-nav-wrapper .header-nav-item--active a span {
+  display: inline-block;
+}
+
+/* Mobile menu nav item display */
+.header-menu-nav-item {
+  display: inline-block;
+}
+
+/* Mobile and nested active link underlines */
+.header-menu-nav-item--active > a[data-folder-id] .header-menu-nav-item-content span:not(.chevron),
+.header-menu-nav-item--accordion-folder:has([aria-current="page"]) > a,
+.header-menu-nav-item--active a {
+  text-decoration: underline;
+  text-underline-offset: var(--active-decoration-offset, 4px);
+  text-decoration-thickness: var(--active-decoration-thickness, 1px);
+}
